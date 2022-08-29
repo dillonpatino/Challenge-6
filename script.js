@@ -21,7 +21,7 @@ function getoneCall(data, city) {
     .then(function(data) {
         console.log(data);
         displayWeather(data, city);
-        displayFiveDay(data, city);
+        displayForecast(data, city);
     })
 }
 
@@ -38,16 +38,12 @@ var citySearch = function(event) {
 
 
 var displayWeather = function(weatherData, city) {
-    $("#main-city-name").text(`${city} (${moment.unix(weatherData.current.dt).format("MM-DD-YYYY")})`);
-    var img = $("<img>")
-    img.attr("src", "https://openweathermap.org/img/wn/" + weatherData.current.weather[0].icon + ".png")
-    $("#city-name").text
+    $("#city-name").text(`${city} (${moment.unix(weatherData.current.dt).format("MM-DD-YYYY")})`);
     $("#city-temp").text(`Temp: ${weatherData.current.temp}` + "°F");
     $("#city-wind").text(`Wind Speed: ${weatherData.current.wind_speed}` + " mph");
     $("#city-humid").text(`Humidity: ${weatherData.current.humidity}` + "%");
     $("#city-uv").text(`UV Index: ${weatherData.current.uvi}`);
 
-    // Highlights the UV Index value
 if (weatherData.current.uvi >= 11) {
     $("#city-uv").css("background-color", "purple")
     } else if (weatherData.current.uvi < 11 && weatherData.current.uvi >= 8) {
@@ -61,34 +57,27 @@ if (weatherData.current.uvi >= 11) {
     }
 }
 
-// Inserts weather data into 5 day forecast cards
-var displayFiveDay = function(weatherData, city) {
-    
-    // Clears previous 5 day weather data card entries
-    $("#five-day").empty();
+var displayForecast = function(weatherData, city) {
+
+    $("#5-day").empty();
     
     for (var i=0; i < 5; i++) {
-    var fiveDayCard = $("<div class='card mt-2 text-white bg-primary'></div>");
-    var fiveDayBody = $("<div class='card-body'></div>");
+    var forecastCard = $("<div class='card mt-3'></div>");
+    var forecastBody = $("<div class='card-body'></div>");
     var date = $("<h6 class='card-title'></h6>");
     date.text(moment.unix(weatherData.daily[i].dt).format("MM-DD-YYYY"));
     var icon = $(`<img src='https://openweathermap.org/img/wn/${weatherData.daily[i].weather[0].icon}.png'>`)
-    var fiveDayTemp = $(`<p class='card-text'>Temp: ${weatherData.hourly[i].temp} °F</p>`);
-    var fiveDayWind = $(`<p class='card-text'>Wind: ${weatherData.daily[i].wind_speed} MPH</p>`);
-    var fiveDayHumid = $(`<p class='card-text'>Humidity: ${weatherData.daily[i].humidity} %</p>`);
-    $("#five-day").append(fiveDayCard);
-    fiveDayCard.append(fiveDayBody);
-    fiveDayBody.append(date, icon, fiveDayTemp, fiveDayWind, fiveDayHumid);
+    var forecastTemp = $(`<p class='card-text'>Temp: ${weatherData.hourly[i].temp} °F</p>`);
+    var forecastWind = $(`<p class='card-text'>Wind: ${weatherData.daily[i].wind_speed} MPH</p>`);
+    var forecastHumid = $(`<p class='card-text'>Humidity: ${weatherData.daily[i].humidity} %</p>`);
+    $("#5-day").append(forecastCard);
+    forecastCard.append(forecastBody);
+    forecastBody.append(date, icon, forecastTemp, forecastWind, forecastHumid);
     }
 
-// Saves the last city searched
 lastCitySearch = city;
-
-// Saves to the search history using weatherdata.name API value
 saveSearchHistory(city);
 }
-
-// Function to save the search history to local storage
 var saveSearchHistory = function(city) {
 
         var searchedCity = $(`<a href='#' class='list-group-item list-group-item-action' id='${city}'>${city}</a>`);
@@ -97,22 +86,19 @@ var saveSearchHistory = function(city) {
         $("#search-history").append(searchedCity);
     }
 
-    // Saves searchHistory array to local storage
     localStorage.setItem("weatherSearchHistory", JSON.stringify(searchHistory));
 
-    // Saves lastCitySearch to local storage
     localStorage.setItem("lastCitySearch", JSON.stringify(lastCitySearch));
 
-    // Displays searchHistory array
     loadSearchHistory();
 }
 
-// Function to load saved city search history from local storage
+
 var loadSearchHistory = function() {
     searchHistory = JSON.parse(localStorage.getItem("weatherSearchHistory"));
     lastCitySearch = JSON.parse(localStorage.getItem("lastCitySearch"));
 
-    // If local storage is empty condition creates an empty searchHistory array and a empty lastCitySearch string
+
     if (!searchHistory) {
         searchHistory = [];
     }
@@ -120,34 +106,26 @@ var loadSearchHistory = function() {
     if (!lastCitySearch) {
         lastCitySearch = "";
     }
-
-    // Clears previous values from #search-history ul
     $("#search-history").empty();
 
-    // For loop will run through all cities found in the array
+  
     for (var i=0; i < searchHistory.length; i++) {
 
-        // Adds city as a link also sets id and appends to the #search-history ul
         var searchedCityLink = $(`<a href='#' class='list-group-item list-group-item-action' id='${searchHistory[i]}'>${searchHistory[i]}</a>`)
         $("#search-history").append(searchedCityLink);
     }
 }
 
-// Loads search history from local storage
    loadSearchHistory();
 
-// Page starts up with the last city searched if there is a saved city
 if (lastCitySearch != "") {
     cityWeather(lastCitySearch);
 }
 
-// Searches city weather when search button is clicked
 $("#search").on("click", citySearch);
 $("#search-history").on("click", function(event) {
 
-    // Gets the link id value
     var prevCity = $(event.target).closest("a").attr("id");
 
-    // Passes id value to the cityWeather function
     cityWeather(prevCity);
 });
